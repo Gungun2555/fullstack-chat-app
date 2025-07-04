@@ -87,24 +87,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // connectSocket: () => {
-  //   const { authUser } = get();
-  //   if (!authUser || get().socket?.connected) return;
-
-  //   const socket = io(BASE_URL, {
-  //     query: {
-  //       userId: authUser._id,
-  //     },
-  //   });
-  //   socket.connect();
-
-  //   set({ socket: socket });
-
-  //   socket.on("getOnlineUsers", (userIds) => {
-  //     set({ onlineUsers: userIds });
-  //   });
-  // },
-
   connectSocket: () => {
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
@@ -114,30 +96,15 @@ export const useAuthStore = create((set, get) => ({
         userId: authUser._id,
       },
     });
-
     socket.connect();
 
-    // ✅ Debug logs
-    socket.on("connect", () => {
-      console.log("[Socket] Connected ✅", socket.id);
-    });
+    set({ socket: socket });
 
-    socket.on("disconnect", () => {
-      console.log("[Socket] Disconnected ❌");
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("[Socket] Connection error", err);
-    });
-
-    set({ socket });
-
-    // ✅ Watch for online users
     socket.on("getOnlineUsers", (userIds) => {
-      console.log("[Socket] Online users:", userIds);
       set({ onlineUsers: userIds });
     });
   },
+
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
