@@ -70,15 +70,16 @@ export const useChatStore = create((set, get) => ({
 
     const socket = useAuthStore.getState().socket;
 
-    socket.off("newMessage"); // Prevent multiple binds
+    socket.off("newMessage");
 
     socket.on("newMessage", (newMessage) => {
       console.log("[Socket] Received newMessage:", newMessage);
 
-      const isMessageFromSelectedUser =
-        newMessage.senderId === selectedUser._id;
+      const isRelevant =
+        newMessage.senderId === selectedUser._id ||
+        newMessage.receiverId === selectedUser._id;
 
-      if (isMessageFromSelectedUser) return;
+      if (!isRelevant) return;
 
       set({
         messages: [...get().messages, newMessage],
