@@ -35,16 +35,62 @@ export const getMessages = async (req, res) => {
   }
 };
 
+// export const sendMessage = async (req, res) => {
+//   try {
+//     const { text, image } = req.body;
+//     const { id: receiverId } = req.params;
+//     const senderId = req.user._id;
+
+//     let imageUrl;
+//     if (image) {
+//       const uploadResponse = await cloudinary.uploader.upload(image);
+//       imageUrl = uploadResponse.secure_url;
+//     }
+
+//     const newMessage = new Message({
+//       senderId,
+//       receiverId,
+//       text,
+//       image: imageUrl,
+//     });
+
+//     await newMessage.save();
+
+//     // todo - real time functonality goes here => socket.io
+//     const receiverSocketId = getReceiverSocketId(receiverId);
+//     if (receiverSocketId) {
+//       io.to(receiverSocketId).emit("newMessage", newMessage);
+//       console.log("Emitted newMessage to:", receiverSocketId);
+//     } else {
+//       console.warn("⚠️ No socket ID found for user", receiverId);
+//     }
+
+//     res.status(201).json(newMessage);
+//   } catch (error) {
+//     console.log("Error in sendMessage", error.message);
+//     res.send(500).json({ message: "Internl server error" });
+//   }
+// };
+
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    let imageUrl;
+    let imageUrl = "";
+
     if (image) {
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
+      try {
+        const uploadResponse = await cloudinary.uploader.upload(image, {
+          folder: "chat_images",
+        });
+        imageUrl = uploadResponse.secure_url;
+        console.log("✅ Image uploaded:", imageUrl);
+      } catch (uploadError) {
+        console.error("❌ Cloudinary upload failed:", uploadError.message);
+        return res.status(500).json({ message: "Image upload failed" });
+      }
     }
 
     const newMessage = new Message({
@@ -56,18 +102,15 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
-    // todo - real time functonality goes here => socket.io
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
-      console.log("Emitted newMessage to:", receiverSocketId);
-    } else {
-      console.warn("⚠️ No socket ID found for user", receiverId);
+      console.log("📨 Emitted newMessage to socket:", receiverSocketId);
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage", error.message);
-    res.send(500).json({ message: "Internl server error" });
+    console.log("❌ Error in sendMessage:", error.message);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
