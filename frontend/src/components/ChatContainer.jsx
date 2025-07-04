@@ -32,11 +32,26 @@ const ChatContainer = () => {
     unsubscribeFromMessages,
   ]);
 
+  // useEffect(() => {
+  //   if (messageEndRef.current && messages) {
+  //     messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [messages]);
+
   useEffect(() => {
-    if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    if (!selectedUser) return;
+
+    // 1. Load messages for new selected user
+    getMessages(selectedUser._id);
+
+    // 2. Subscribe to real-time messages
+    useChatStore.getState().unsubscribeFromMessages(); // Always unsubscribe first
+    useChatStore.getState().subscribeToMessages();
+
+    return () => {
+      useChatStore.getState().unsubscribeFromMessages();
+    };
+  }, [selectedUser?._id]);
 
   if (isMessagesLoading) {
     return (
