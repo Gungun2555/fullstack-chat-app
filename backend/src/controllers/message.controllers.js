@@ -58,9 +58,16 @@ export const sendMessage = async (req, res) => {
 
     // todo - real time functonality goes here => socket.io
     const receiverSocketId = getReceiverSocketId(receiverId);
+    // if (receiverSocketId) {
+    //   io.to(receiverSocketId).emit("newMessage", newMessage);
+    //   console.log("Emitted newMessage to:", receiverSocketId);
+    // }
+
     if (receiverSocketId) {
+      console.log("🎯 Emitting newMessage to:", receiverSocketId);
       io.to(receiverSocketId).emit("newMessage", newMessage);
-      console.log("Emitted newMessage to:", receiverSocketId);
+    } else {
+      console.warn("⚠️ No socket ID found for user", receiverId);
     }
 
     res.status(201).json(newMessage);
